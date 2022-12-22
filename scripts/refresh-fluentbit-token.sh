@@ -9,7 +9,7 @@ fi
 
 if [ -n "$1" ]
   then
-  new_token=$(./gen-fluentbit-token.sh $1 | base64)
+  new_token=$(./gen-fluentbit-token.sh | base64)
 
   echo "Refreshing: $1"
 
