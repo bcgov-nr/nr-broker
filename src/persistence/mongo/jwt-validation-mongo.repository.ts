@@ -12,6 +12,12 @@ export class JwtValidationMongoRepository implements JwtValidationRepository {
     @InjectRepository(JwtBlockDto)
     private jwtBlockRepository: MongoRepository<JwtBlockDto>,
   ) {}
+
+  /**
+   * Returns if a JWT match is found in the allow list
+   * @param jwt The JWT to test
+   * @returns A promise resolving to true if the JWT is allowed and false otherwise
+   */
   public async matchesAllowed(jwt: JwtDto): Promise<boolean> {
     return !!(await this.jwtAllowRepository.findOne({
       where: {
@@ -32,6 +38,11 @@ export class JwtValidationMongoRepository implements JwtValidationRepository {
       } as any,
     }));
   }
+  /**
+   * Returns if a JWT match is found in the block list
+   * @param jwt The JWT to test
+   * @returns A promise resolving to true if the JWT is blocked and false otherwise
+   */
   public async matchesBlocked(jwt: JwtDto): Promise<boolean> {
     return !!(await this.jwtBlockRepository.findOne({
       where: {

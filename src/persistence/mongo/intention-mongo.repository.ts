@@ -12,14 +12,19 @@ export class IntentionMongoRepository implements IntentionRepository {
     private intentionRepository: MongoRepository<IntentionDto>,
   ) {}
 
+  /**
+   * Save intention to repository
+   * @param intention The intention DTO to save
+   * @returns Promise returning repository response
+   */
   public async addIntention(intention: IntentionDto): Promise<any> {
     return await this.intentionRepository.save(intention);
   }
 
-  public async findAllIntention(): Promise<IntentionDto[]> {
-    return this.intentionRepository.find();
-  }
-
+  /**
+   * Return all expired intentions
+   * @returns Promise of array of intentions that have expired
+   */
   public async findExpiredIntentions(): Promise<IntentionDto[]> {
     const currentTime = new Date().valueOf();
     return this.intentionRepository.find({
@@ -27,6 +32,11 @@ export class IntentionMongoRepository implements IntentionRepository {
     });
   }
 
+  /**
+   * Returns the intention with matching token
+   * @param token The intention token to match
+   * @returns Promise resolving to matching intention or null otherwise
+   */
   public async getIntentionByToken(
     token: string,
   ): Promise<IntentionDto | null> {
@@ -35,6 +45,11 @@ export class IntentionMongoRepository implements IntentionRepository {
     });
   }
 
+  /**
+   * Returns the intention containing an action with matching token
+   * @param token The action token to match
+   * @returns Promise resolving to matching intention or null otherwise
+   */
   public async getIntentionByActionToken(
     token: string,
   ): Promise<IntentionDto | null> {
@@ -43,35 +58,20 @@ export class IntentionMongoRepository implements IntentionRepository {
     });
   }
 
-  public async getIntentionActionByToken(
-    token: string,
-  ): Promise<ActionDto | null> {
-    const action = await this.intentionRepository
-      .findOne({
-        where: { 'actions.trace.token': token } as any,
-      })
-      // project the matching ActionDto
-      .then((intention) =>
-        intention
-          ? intention.actions.find((action) => action.trace.token === token)
-          : null,
-      );
-    return action;
-  }
-
+  /**
+   * Set intention action lifecycle state
+   * @param token The action token to match
+   * @param outcome The outcome (if ending)
+   * @param type The lifecyle state
+   * @returns A promise resolving to the updated action
+   */
   public async setIntentionActionLifecycle(
     token: string,
     outcome: string | undefined,
     type: 'start' | 'end',
   ): Promise<ActionDto> {
-    const intention = await this.intentionRepository.findOne({
-      where: { 'actions.trace.token': token } as any,
-    });
-
-    const action = intention.actions
-      .filter((action) => action.trace.token === token)
-      // There will only ever be one
-      .find(() => true);
+    const intention = await this.getIntentionByActionToken(token);
+    const action = IntentionDto.projectAction(intention, token);
 
     if (action) {
       const currentTime = new Date().toISOString();
@@ -96,11 +96,21 @@ export class IntentionMongoRepository implements IntentionRepository {
     return action;
   }
 
+  /**
+   * Close intention with matching token
+   * @param token The intention token to match
+   * @returns Promise resolving to true if an intention is closed and false otherwise
+   */
   public async closeIntentionByToken(token: string): Promise<boolean> {
     const intention = await this.getIntentionByToken(token);
     return this.closeIntention(intention);
   }
 
+  /**
+   * Close intention
+   * @param intention The intention to close
+   * @returns Promise resovling to true if an intention is closed and false otherwise
+   */
   public async closeIntention(intention: IntentionDto): Promise<boolean> {
     if (intention) {
       const result = await this.intentionRepository.delete(intention.id);
