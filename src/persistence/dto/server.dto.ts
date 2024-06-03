@@ -1,6 +1,12 @@
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Entity, ObjectIdColumn, ObjectId, Column } from 'typeorm';
-import { IsDate, IsDefined, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsDefined,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { VertexPointerDto } from './vertex-pointer.dto';
 
 @Entity({ name: 'server' })
@@ -68,4 +74,9 @@ export class ServerDto extends VertexPointerDto {
   @IsString()
   @Column()
   osVersion?: string;
+
+  @IsOptional()
+  @IsObject()
+  @Column()
+  variables?: any;
 }

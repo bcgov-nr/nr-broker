@@ -8,8 +8,8 @@ Users can search, browse objects, view a graph representation and review activit
 
 <img src="./images/broker_architecture.png" alt="NR Broker Lifecycle" width="900"/>
 
-## Deployment Specific Information
+## Scope
 
-If this documentation refers to things as 'deployment specific' then you should refer to your team's own documentation. Your deployment should show a link to your documentation on the homepage.
+This documentation is generic to all NR Broker installations. Your installation determines how you do things like searching audit and access logs. Your team may have setup tooling that utilizes NR Broker data. This documentation is unaware of how your deployment is integrated into your various systems.
 
-This documentation is generic to all NR Broker installations.
+Your administrators have likely added a link to your team's documentation on the NR Broker homepage. If this documentation refers to things as 'deployment specific' then you should refer to your team's own documentation. 

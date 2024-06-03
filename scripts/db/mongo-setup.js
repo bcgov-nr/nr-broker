@@ -621,6 +621,10 @@ result = db.collectionConfig.insertOne({
       type: 'string',
       hint: 'System version string',
     },
+    variables: {
+      type: 'embeddedDoc',
+      required: false,
+    },
   },
   browseFields: [
     'name',
