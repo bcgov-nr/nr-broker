@@ -1,44 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
-import {
-  IsDefined,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { VertexPointerDto } from './vertex-pointer.dto';
+import { PackageBuildSearchResult } from './package-build.dto';
+import { ServiceInstanceDetailsResponseDto } from './service-instance.dto';
 import { VaultConfigDto } from './vault-config.dto';
+import { VertexPointerDto } from './vertex-pointer.dto';
 
-@Entity({ name: 'service' })
+// Shared DTO: Copy in back-end and front-end should be identical
 export class ServiceDto extends VertexPointerDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
-
-  @IsOptional()
-  @IsString()
-  @Column()
+  id!: string;
   description?: string;
-
-  @IsDefined()
-  @IsString()
-  @Column()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  @Column()
+  name!: string;
   title?: string;
-
-  @IsOptional()
-  @IsString()
-  @Column()
   scmUrl?: string;
-
-  @ValidateNested()
-  @IsOptional()
-  @Column(() => VaultConfigDto)
-  @Type(() => VaultConfigDto)
   vaultConfig?: VaultConfigDto;
+}
+
+export class ServiceDetailsResponseDto extends ServiceDto {
+  serviceInstance: ServiceInstanceDetailsResponseDto[];
+  builds: PackageBuildSearchResult;
 }

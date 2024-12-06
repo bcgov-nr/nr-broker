@@ -1,103 +1,59 @@
-import { Column, Entity, Index, ObjectId, ObjectIdColumn } from 'typeorm';
-import { PointGeom } from './point.geom';
-import { ApiProperty } from '@nestjs/swagger';
-import { Type, plainToInstance } from 'class-transformer';
-import {
-  IsDefined,
-  IsNotEmptyObject,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-
-import { BrokerAccountDto } from './broker-account.dto';
-import { CollectionDtoUnion } from './collection-dto-union.type';
-import { EnvironmentDto } from './environment.dto';
-import { ProjectDto } from './project.dto';
-import { ServerDto } from './server.dto';
-import { ServiceDto } from './service.dto';
-import { ServiceInstanceDto } from './service-instance.dto';
-import { TeamDto } from './team.dto';
-import { UserDto } from './user.dto';
-import { VertexInsertDto, VertexPropDto } from './vertex-rest.dto';
-import { IsValidProp } from '../../util/validator.util';
+import { IsObject, IsString, IsOptional } from 'class-validator';
+import { CollectionNames } from './collection-dto-union.type';
+import { PointGeomDto } from './point-geom.dto';
 import { TimestampDto } from './timestamp.dto';
 
-@Entity({ name: 'vertex' })
-export class VertexDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
+// Shared DTO: Copy in back-end and front-end should be identical
 
-  @Index()
-  @Column()
-  @ApiProperty({ type: () => String })
-  @IsDefined()
+export class VertexPropDto {
+  [key: string]: string;
+}
+
+export class VertexSearchDto {
   @IsString()
-  collection: keyof CollectionDtoUnion;
-
-  @Column(() => PointGeom)
-  @IsOptional()
-  @ValidateNested()
-  geo?: PointGeom;
-
-  @Column()
-  @IsDefined()
+  id!: string;
   @IsString()
-  name: string;
-
-  /**
-   * prop.label: Special case for labeling a vertex
-   */
-  @Column()
+  collection!: CollectionNames;
   @IsOptional()
-  @IsValidProp()
-  @IsNotEmptyObject()
+  @IsObject()
+  geo?: PointGeomDto;
+  @IsString()
+  name!: string;
+  @IsOptional()
+  @IsObject()
   prop?: VertexPropDto;
+  @IsObject()
+  edge!: {
+    prop?: VertexPropDto;
+  };
+}
 
+export class VertexDto {
+  @IsString()
+  id!: string;
+  @IsString()
+  collection!: CollectionNames;
+  @IsString()
+  name!: string;
   @IsOptional()
-  @Column(() => TimestampDto)
-  @Type(() => TimestampDto)
+  @IsObject()
+  geo?: PointGeomDto;
+  @IsOptional()
+  @IsObject()
+  prop?: VertexPropDto;
+  @IsOptional()
+  @IsObject()
   timestamps?: TimestampDto;
+}
 
-  static upgradeInsertDto(value: VertexInsertDto): VertexDto {
-    const vertex = new VertexDto();
-    vertex.collection = value.collection;
-    if (value.geo) {
-      vertex.geo = value.geo;
-    }
-    if (value.prop) {
-      vertex.prop = value.prop;
-    }
-
-    return vertex;
-  }
-
-  static upgradeDataToInstance(
-    vertex: VertexInsertDto,
-  ): CollectionDtoUnion[typeof vertex.collection] {
-    switch (vertex.collection) {
-      case 'brokerAccount':
-        return plainToInstance(BrokerAccountDto, vertex.data);
-      case 'environment':
-        return plainToInstance(EnvironmentDto, vertex.data);
-      case 'project':
-        return plainToInstance(ProjectDto, vertex.data);
-      case 'server':
-        return plainToInstance(ServerDto, vertex.data);
-      case 'serviceInstance':
-        return plainToInstance(ServiceInstanceDto, vertex.data);
-      case 'service':
-        return plainToInstance(ServiceDto, vertex.data);
-      case 'team':
-        return plainToInstance(TeamDto, vertex.data);
-      case 'user':
-        return plainToInstance(UserDto, vertex.data);
-      default:
-        // If this is an error then not all collection types are above
-        // eslint-disable-next-line no-case-declarations
-        const _exhaustiveCheck: never = vertex.collection;
-        return _exhaustiveCheck;
-    }
-  }
+export class VertexInsertDto {
+  @IsString()
+  collection!: CollectionNames;
+  data: any;
+  @IsOptional()
+  @IsObject()
+  geo?: PointGeomDto;
+  @IsOptional()
+  @IsObject()
+  prop?: VertexPropDto;
 }

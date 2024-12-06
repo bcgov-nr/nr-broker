@@ -13,9 +13,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 import { Request } from 'express';
+
 import { HEADER_BROKER_TOKEN } from '../constants';
 import { ActionUtil } from '../util/action.util';
-import { IntentionDtoValidationPipe } from './intention-dto-validation.pipe';
+import { IntentionEntityValidationPipe } from './intention-dto-validation.pipe';
 import { IntentionService } from './intention.service';
 import { BrokerJwtAuthGuard } from '../auth/broker-jwt-auth.guard';
 import { BrokerCombinedAuthGuard } from '../auth/broker-combined-auth.guard';
@@ -25,8 +26,8 @@ import { IntentionSearchQuery } from './dto/intention-search-query.dto';
 import { IntentionCloseDto } from './dto/intention-close.dto';
 import { ArtifactDto } from './dto/artifact.dto';
 import { ArtifactSearchQuery } from './dto/artifact-search-query.dto';
-import { IntentionDto } from './dto/intention.dto';
 import { ActionPatchRestDto } from './dto/action-patch-rest.dto';
+import { IntentionDto } from './dto/intention.dto';
 
 @Controller({
   path: 'intention',
@@ -43,7 +44,7 @@ export class IntentionController {
   @ApiBearerAuth()
   async openIntention(
     @Req() request: Request,
-    @Body(IntentionDtoValidationPipe)
+    @Body(IntentionEntityValidationPipe)
     intentionDto: IntentionDto,
     @Query('ttl') ttl: number | undefined,
     @Query('quickstart') quickStart: boolean | undefined,
@@ -64,7 +65,7 @@ export class IntentionController {
   @ApiBearerAuth()
   preflightIntention(
     @Req() request: Request,
-    @Body(IntentionDtoValidationPipe)
+    @Body(IntentionEntityValidationPipe)
     intentionDto: IntentionDto,
     @Query('ttl') ttl: number | undefined,
   ) {
@@ -121,7 +122,7 @@ export class IntentionController {
     }
     await this.intentionService.actionLifecycle(
       request,
-      request.brokerIntentionDto,
+      request.brokerIntentionEntity,
       request.brokerActionDto,
       outcome,
       'end',
@@ -146,7 +147,7 @@ export class IntentionController {
     }
     return await this.intentionService.actionArtifactRegister(
       request,
-      request.brokerIntentionDto,
+      request.brokerIntentionEntity,
       request.brokerActionDto,
       artifact,
     );
@@ -176,14 +177,14 @@ export class IntentionController {
     try {
       return await this.intentionService.patchAction(
         request,
-        request.brokerIntentionDto,
+        request.brokerIntentionEntity,
         request.brokerActionDto,
         actionPatch,
       );
     } catch (e) {
       await this.intentionService.close(
         request,
-        request.brokerIntentionDto.transaction.token,
+        request.brokerIntentionEntity.transaction.token,
         'failure',
         'Patch failure',
       );
@@ -205,7 +206,7 @@ export class IntentionController {
   async actionStart(@Req() request: ActionGuardRequest) {
     await this.intentionService.actionLifecycle(
       request,
-      request.brokerIntentionDto,
+      request.brokerIntentionEntity,
       request.brokerActionDto,
       undefined,
       'start',

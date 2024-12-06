@@ -1,26 +1,38 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ObjectIdColumn } from 'typeorm';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import {
+  Entity,
+  PrimaryKey,
+  Property,
+  SerializedPrimaryKey,
+} from '@mikro-orm/core';
 import { ObjectId } from 'mongodb';
+import { Transform } from 'class-transformer';
 import { VertexDto } from './vertex.dto';
 import { EdgeDto } from './edge.dto';
-import { Transform } from 'class-transformer';
 
-@Entity({ name: 'graphRequestDto' })
+@Entity({ tableName: 'graphRequestDto' })
 export class GraphRequestDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
+  @ApiHideProperty()
+  @Transform((value) =>
+    value.obj.id ? new ObjectId(value.obj.id.toString()) : null,
+  )
+  @PrimaryKey()
+  @Property()
+  _id: ObjectId;
 
-  @Column()
+  @SerializedPrimaryKey()
+  id!: string; // won't be saved in the database
+
+  @Property()
   created: Date;
 
-  @Column()
+  @Property()
   type: 'edge' | 'vertex';
 
-  @Column()
+  @Property()
   data: Omit<EdgeDto, 'id'> | Omit<VertexDto, 'id'>;
 
-  @Column()
+  @Property()
   @ApiProperty({ type: () => String })
   @Transform((value) =>
     value.obj.requestor ? new ObjectId(value.obj.requestor.toString()) : null,

@@ -1,36 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
-import { IsDefined, IsOptional, IsString } from 'class-validator';
 import { VertexPointerDto } from './vertex-pointer.dto';
 
-@Entity({ name: 'project' })
+// Shared DTO: Copy in back-end and front-end should be identical
 export class ProjectDto extends VertexPointerDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
-
-  @IsOptional()
-  @IsString()
-  @Column()
+  id!: string;
   description?: string;
-
-  @IsOptional()
-  @IsString()
-  @Column()
   email?: string;
-
-  @IsDefined()
-  @IsString()
-  @Column()
-  name: string;
-
-  @IsOptional()
-  @IsString()
-  @Column()
+  name!: string;
   title?: string;
-
-  @IsOptional()
-  @IsString()
-  @Column()
   website?: string;
 }

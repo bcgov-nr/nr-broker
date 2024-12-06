@@ -1,74 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, MongoRepository } from 'typeorm';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { MongoEntityRepository } from '@mikro-orm/mongodb';
+import { EntityManager } from '@mikro-orm/core';
 import { ObjectId } from 'mongodb';
-import { ActionDto } from '../../intention/dto/action.dto';
-import { IntentionDto } from '../../intention/dto/intention.dto';
+
+import { LIFECYCLE_NAMES } from '../../intention/dto/action.dto';
+import { IntentionEntity } from '../../intention/entity/intention.entity';
 import { IntentionRepository } from '../interfaces/intention.repository';
 import { extractId } from './mongo.util';
 import { IntentionSearchResult } from '../../intention/dto/intention-search-result.dto';
-import { ArtifactDto } from '../../intention/dto/artifact.dto';
+import { ActionEmbeddable } from '../../intention/entity/action.embeddable';
+import { ArtifactEmbeddable } from '../../intention/entity/artifact.embeddable';
 
 @Injectable()
 export class IntentionMongoRepository implements IntentionRepository {
   constructor(
-    @InjectRepository(IntentionDto)
-    private readonly intentionRepository: MongoRepository<IntentionDto>,
+    private readonly em: EntityManager,
+    @InjectRepository(IntentionEntity)
+    private readonly intentionRepository: MongoEntityRepository<IntentionEntity>,
   ) {}
 
-  public async addIntention(intention: IntentionDto): Promise<any> {
-    if (intention.id) {
-      const id = extractId(intention);
-      await this.intentionRepository.replaceOne({ _id: id }, intention);
-      return intention;
-    }
-    return await this.intentionRepository.save(intention);
+  public async addIntention(intention: IntentionEntity): Promise<any> {
+    await this.em.persist(intention).flush();
   }
 
   public async getIntention(
     id: string | ObjectId,
-  ): Promise<IntentionDto | null> {
-    return this.intentionRepository.findOne({
-      where: { _id: new ObjectId(id) },
-    });
+  ): Promise<IntentionEntity | null> {
+    return this.intentionRepository.findOne({ _id: new ObjectId(id) });
   }
 
-  public async findAllIntention(): Promise<IntentionDto[]> {
-    return this.intentionRepository.find({
-      where: { closed: { $ne: true } },
-    });
+  public async findAllIntention(): Promise<IntentionEntity[]> {
+    return this.intentionRepository.find({ closed: { $ne: true } });
   }
 
-  public async findExpiredIntentions(): Promise<IntentionDto[]> {
+  public async findExpiredIntentions(): Promise<IntentionEntity[]> {
     const currentTime = new Date().valueOf();
     return this.intentionRepository.find({
-      where: { expiry: { $lt: currentTime }, closed: { $ne: true } } as any,
+      expiry: { $lt: currentTime },
+      closed: { $ne: true },
     });
   }
 
   public async getIntentionByToken(
     token: string,
-  ): Promise<IntentionDto | null> {
+  ): Promise<IntentionEntity | null> {
     return await this.intentionRepository.findOne({
-      where: { 'transaction.token': token, closed: { $ne: true } } as any,
-    });
+      'transaction.token': token,
+      closed: { $ne: true },
+    } as any);
   }
 
   public async getIntentionByActionToken(
     token: string,
-  ): Promise<IntentionDto | null> {
+  ): Promise<IntentionEntity | null> {
     return await this.intentionRepository.findOne({
-      where: { 'actions.trace.token': token, closed: { $ne: true } } as any,
-    });
+      'actions.trace.token': token,
+      closed: { $ne: true },
+    } as any);
   }
 
   public async getIntentionActionByToken(
     token: string,
-  ): Promise<ActionDto | null> {
+  ): Promise<ActionEmbeddable | null> {
     const action = await this.intentionRepository
-      .findOne({
-        where: { 'actions.trace.token': token, closed: { $ne: true } } as any,
-      })
+      .findOne({ 'actions.trace.token': token, closed: { $ne: true } } as any)
       // project the matching ActionDto
       .then((intention) =>
         intention
@@ -82,10 +78,11 @@ export class IntentionMongoRepository implements IntentionRepository {
     token: string,
     outcome: string | undefined,
     type: 'start' | 'end',
-  ): Promise<ActionDto> {
+  ): Promise<ActionEmbeddable> {
     const intention = await this.intentionRepository.findOne({
-      where: { 'actions.trace.token': token, closed: { $ne: true } } as any,
-    });
+      'actions.trace.token': token,
+      closed: { $ne: true },
+    } as any);
     if (intention === null) {
       throw new Error();
     }
@@ -97,7 +94,8 @@ export class IntentionMongoRepository implements IntentionRepository {
 
     if (action) {
       const currentTime = new Date().toISOString();
-      action.lifecycle = type === 'start' ? 'started' : 'ended';
+      action.lifecycle =
+        type === 'start' ? LIFECYCLE_NAMES.STARTED : LIFECYCLE_NAMES.ENDED;
       if (action.lifecycle === 'started') {
         action.trace.start = currentTime;
       }
@@ -112,17 +110,20 @@ export class IntentionMongoRepository implements IntentionRepository {
       }
     }
     const id = extractId(intention);
-    await this.intentionRepository.replaceOne({ _id: id }, intention);
+    await this.intentionRepository
+      .getCollection()
+      .replaceOne({ _id: id }, intention);
     return action;
   }
 
   public async addIntentionActionArtifact(
     token: string,
-    artifact: ArtifactDto,
-  ): Promise<ActionDto> {
+    artifact: ArtifactEmbeddable,
+  ): Promise<ActionEmbeddable> {
     const intention = await this.intentionRepository.findOne({
-      where: { 'actions.trace.token': token, closed: { $ne: true } } as any,
-    });
+      'actions.trace.token': token,
+      closed: { $ne: true },
+    } as any);
     if (intention === null) {
       throw new Error();
     }
@@ -139,7 +140,9 @@ export class IntentionMongoRepository implements IntentionRepository {
     }
 
     const id = extractId(intention);
-    await this.intentionRepository.replaceOne({ _id: id }, intention);
+    await this.intentionRepository
+      .getCollection()
+      .replaceOne({ _id: id }, intention);
     return action;
   }
 
@@ -148,21 +151,22 @@ export class IntentionMongoRepository implements IntentionRepository {
     return this.closeIntention(intention);
   }
 
-  public async closeIntention(intention: IntentionDto): Promise<boolean> {
+  public async closeIntention(intention: IntentionEntity): Promise<boolean> {
     if (intention) {
       intention.closed = true;
       const id = extractId(intention);
-      const result = await this.intentionRepository.replaceOne(
-        { _id: id },
-        intention,
-      );
+      const result = await this.intentionRepository
+        .getCollection()
+        .replaceOne({ _id: id }, intention);
       return result.modifiedCount === 1;
     }
     return false;
   }
 
   public async searchIntentions(
-    where: FindOptionsWhere<IntentionDto> | FindOptionsWhere<IntentionDto>[],
+    where: any,
+    // | FindOptionsWhere<IntentionEntity>
+    // | FindOptionsWhere<IntentionEntity>[],
     offset: number,
     limit: number,
   ): Promise<IntentionSearchResult> {
@@ -196,7 +200,6 @@ export class IntentionMongoRepository implements IntentionRepository {
         },
         { $unwind: '$meta' },
       ])
-      .toArray()
       .then((array) => {
         if (array[0]) {
           return array[0] as unknown as IntentionSearchResult;
@@ -214,7 +217,7 @@ export class IntentionMongoRepository implements IntentionRepository {
     actionId: string,
     packageId: ObjectId,
   ): Promise<void> {
-    await this.intentionRepository.updateOne(
+    await this.intentionRepository.getCollection().updateOne(
       { _id: id, 'actions.id': actionId },
       {
         $set: {
@@ -225,7 +228,7 @@ export class IntentionMongoRepository implements IntentionRepository {
   }
 
   public async cleanupTransient(transientTtl: number): Promise<void> {
-    this.intentionRepository.deleteMany({
+    this.intentionRepository.getCollection().deleteMany({
       'event.transient': true,
       closed: true,
       expiry: { $lt: Date.now() - transientTtl },

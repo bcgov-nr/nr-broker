@@ -1,84 +1,136 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, Index, ObjectId, ObjectIdColumn } from 'typeorm';
-import {
-  CollectionEdgeConfig,
-  CollectionEdgeInstanceConfig,
-  CollectionFieldConfigMap,
-  CollectionMap,
-  CollectionSyncConfig,
-} from './collection-config-rest.dto';
+import { CollectionNames } from './collection-dto-union.type';
 import { EdgeDto } from './edge.dto';
-import { CollectionDtoUnion } from './collection-dto-union.type';
+import { UserPermissionNames } from './user-permission.dto';
 
-@Entity({ name: 'collectionConfig' })
+// Shared DTO: Copy in back-end and front-end should be identical
+export class CollectionEdgePermissions {
+  request!: boolean;
+}
+
+export class CollectionEdgePrototype {
+  description!: string;
+  target!: string;
+  targetName!: string;
+  name!: string;
+  permissions!: CollectionEdgePermissions;
+  property!: CollectionFieldConfigMap;
+  url!: string;
+}
+
+export class CollectionEdgeConfig {
+  id!: string;
+  collection!: CollectionNames;
+  name!: string;
+  onDelete?: 'cascade';
+  relation!: 'oneToMany' | 'oneToOne';
+  show!: boolean;
+  inboundName?: string;
+  namePath?: string;
+  prototypes?: CollectionEdgePrototype[];
+}
+
+export type CollectionEdgeInstanceConfig = Omit<
+  CollectionEdgeConfig,
+  'prototypes'
+> & {
+  prototype: CollectionEdgePrototype;
+};
+
+export class CollectionFieldConfig {
+  hint!: string;
+  init?: 'uuid' | 'now';
+  mask?: {
+    [Property in UserPermissionNames]?: boolean | string[];
+  };
+  name!: string;
+  placeholder?: string;
+  required!: boolean;
+  sort?: boolean;
+  type!:
+    | 'boolean'
+    | 'date'
+    | 'email'
+    | 'embeddedDoc'
+    | 'embeddedDocArray'
+    | 'json'
+    | 'number'
+    | 'string'
+    | 'stringArray'
+    | 'url';
+  unique?: boolean;
+  uniqueParent?: boolean;
+  value?: string | boolean;
+  valuePath?: string;
+}
+
+export class CollectionFieldConfigMap {
+  [key: string]: CollectionFieldConfig;
+}
+
+export class CollectionMap {
+  getPath!: string;
+  setPath!: string;
+}
+
+export class CollectionConfigParent {
+  edgeName!: string;
+}
+
+export class CollectionConfigPermissions {
+  browse!: boolean;
+  create!: boolean;
+  filter!: boolean;
+  update!: boolean;
+  delete!: boolean;
+}
+
 export class CollectionConfigDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
+  id!: string;
+  browseFields!: string[];
+  collection!: CollectionNames;
+  collectionMapper!: CollectionMap[];
+  collectionVertexName!: string;
+  color!: string;
+  edges!: CollectionEdgeConfig[];
+  fields!: CollectionFieldConfigMap;
+  hint!: string;
+  index!: number;
+  name!: string;
+  parent!: CollectionConfigParent;
+  permissions!: CollectionConfigPermissions;
+  show!: boolean;
+}
 
-  @Column()
-  browseFields: string[];
+export class LinksAltDto {
+  environmentPosition!: number;
+  environmentTitle!: string;
+  name!: string;
+  url!: string;
+}
+export class LinksDto {
+  default!: string;
+  alt?: LinksAltDto[];
+}
 
-  @Column()
-  @Index()
-  @ApiProperty({ type: () => String })
-  collection: keyof CollectionDtoUnion;
-
-  @Column()
-  collectionMapper: CollectionMap[];
-
-  @Column()
-  collectionVertexName: string;
-
-  @Column()
-  color: string;
-
-  @Column()
-  edges: CollectionEdgeConfig[];
-
-  @Column()
-  fields: CollectionFieldConfigMap;
-
-  @Column()
-  fieldDefaultSort: {
-    field: string;
-    dir: 1 | -1;
+export class CollectionSyncConfig {
+  index!: string;
+  unique!: string;
+  map!: {
+    [key: string]:
+      | {
+          type: 'first';
+          dest: string;
+        }
+      | {
+          type: 'pick';
+          endsWith: string[];
+          dest: string;
+        };
   };
-
-  @Column()
-  hint: string;
-
-  @Column()
-  index: number;
-
-  @Column()
-  name: string;
-
-  @Column()
-  ownableCollections?: string[];
-
-  @Column()
-  parent: {
-    edgeName: string;
-  };
-
-  @Column()
-  permissions: {
-    browse: boolean;
-    create: boolean;
-    filter: boolean;
-    update: boolean;
-    delete: boolean;
-  };
-
-  @Column()
-  show: boolean;
-
-  @Column()
-  sync?: CollectionSyncConfig;
 }
 
 export type CollectionConfigInstanceDto = Omit<CollectionConfigDto, 'edges'> & {
   edge: CollectionEdgeInstanceConfig;
-  instance: EdgeDto;
+  instance?: EdgeDto;
+  links?: LinksDto;
 };

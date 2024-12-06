@@ -1,35 +1,12 @@
-import { ApiHideProperty } from '@nestjs/swagger';
-import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
-import { IsDefined, IsNumber, IsString } from 'class-validator';
 import { VertexPointerDto } from './vertex-pointer.dto';
 
-@Entity({ name: 'environment' })
+// Shared DTO: Copy in back-end and front-end should be identical
+
 export class EnvironmentDto extends VertexPointerDto {
-  @ObjectIdColumn()
-  @ApiHideProperty()
-  id: ObjectId;
-
-  @IsDefined()
-  @IsString()
-  @Column()
-  name: string;
-
-  @IsDefined()
-  @IsString()
-  @Column()
-  short: string;
-
-  @Column()
-  @IsDefined()
-  aliases: string[];
-
-  @IsDefined()
-  @IsString()
-  @Column()
-  title: string;
-
-  @IsDefined()
-  @IsNumber()
-  @Column()
-  position: number;
+  id!: string;
+  name!: string;
+  short!: string;
+  aliases!: string[];
+  title!: string;
+  position!: number;
 }
