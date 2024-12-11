@@ -8,29 +8,28 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { SystemApiService } from '../service/system-api.service';
-import { ConnectionConfigRestDto } from '../service/dto/connection-config-rest.dto';
+import { ConnectionConfigDto } from '../service/dto/connection-config.dto';
 import { PreferencesService } from '../preferences.service';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [
-    RouterModule,
-    MatButtonModule,
-    MatCardModule,
-    MatDividerModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTabsModule,
-  ],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+    selector: 'app-home',
+    imports: [
+        RouterModule,
+        MatButtonModule,
+        MatCardModule,
+        MatDividerModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        MatTabsModule,
+    ],
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
   loading = true;
   selectedTabIndex = 0;
-  services: ConnectionConfigRestDto[] = [];
-  documents: ConnectionConfigRestDto[] = [];
+  services: ConnectionConfigDto[] = [];
+  documents: ConnectionConfigDto[] = [];
 
   constructor(
     private readonly systemApiService: SystemApiService,

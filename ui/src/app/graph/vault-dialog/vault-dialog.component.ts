@@ -8,27 +8,26 @@ import {
   MatDialogRef,
 } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { ServiceRestDto } from '../../service/dto/service-rest.dto';
-import { VaultConfigRestDto } from '../../service/dto/vault-config-rest.dto';
+import { ServiceDto } from '../../service/dto/service.dto';
+import { VaultConfigDto } from '../../service/dto/vault-config.dto';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 
 @Component({
-  selector: 'app-vault-dialog',
-  standalone: true,
-  imports: [
-    FormsModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatDialogModule,
-    MatDividerModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-  ],
-  templateUrl: './vault-dialog.component.html',
-  styleUrl: './vault-dialog.component.scss',
+    selector: 'app-vault-dialog',
+    imports: [
+        FormsModule,
+        MatButtonModule,
+        MatCheckboxModule,
+        MatDialogModule,
+        MatDividerModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatSelectModule,
+    ],
+    templateUrl: './vault-dialog.component.html',
+    styleUrl: './vault-dialog.component.scss'
 })
 export class VaultDialogComponent implements OnInit {
   public config: {
@@ -66,7 +65,7 @@ export class VaultDialogComponent implements OnInit {
   constructor(
     @Inject(MAT_DIALOG_DATA)
     public readonly data: {
-      service: ServiceRestDto;
+      service: ServiceDto;
       showMasked: boolean;
     },
     public readonly dialogRef: MatDialogRef<VaultDialogComponent>,
@@ -128,7 +127,7 @@ export class VaultDialogComponent implements OnInit {
   }
 
   update() {
-    const configObj: VaultConfigRestDto = {
+    const configObj: VaultConfigDto = {
       enabled: this.config.enabled,
     };
 

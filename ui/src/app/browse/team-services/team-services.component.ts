@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CollectionConfigInstanceRestDto } from '../../service/dto/collection-config-rest.dto';
+import { CollectionConfigInstanceDto } from '../../service/dto/collection-config.dto';
 import { GraphApiService } from '../../service/graph-api.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -11,28 +11,27 @@ import { MatButtonModule } from '@angular/material/button';
 import { TeamServiceRequestComponent } from '../../team/team-service-request/team-service-request.component';
 
 @Component({
-  selector: 'app-team-services',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatDividerModule,
-    MatIconModule,
-    MatTableModule,
-    MatTooltipModule,
-    TeamServiceRequestComponent,
-  ],
-  templateUrl: './team-services.component.html',
-  styleUrl: './team-services.component.scss',
+    selector: 'app-team-services',
+    imports: [
+        CommonModule,
+        MatButtonModule,
+        MatCardModule,
+        MatDividerModule,
+        MatIconModule,
+        MatTableModule,
+        MatTooltipModule,
+        TeamServiceRequestComponent,
+    ],
+    templateUrl: './team-services.component.html',
+    styleUrl: './team-services.component.scss'
 })
 export class TeamServicesComponent {
   @Input() teamVertex!: string;
 
   propDisplayedColumns: string[] = ['key', 'value'];
 
-  activeServices: CollectionConfigInstanceRestDto[] = [];
-  requestServices: CollectionConfigInstanceRestDto[] = [];
+  activeServices: CollectionConfigInstanceDto[] = [];
+  requestServices: CollectionConfigInstanceDto[] = [];
   serviceCount = 0;
 
   constructor(private readonly graphApi: GraphApiService) {}

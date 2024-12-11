@@ -1,102 +1,38 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, Index, ObjectIdColumn } from 'typeorm';
-import { ObjectId } from 'mongodb';
 import {
   IsDefined,
-  IsNotEmptyObject,
-  IsNumber,
+  IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
-import { EdgeInsertDto, EdgeRestDto } from './edge-rest.dto';
 import { EdgePropDto } from './edge-prop.dto';
-import { Transform, Type } from 'class-transformer';
-import { IsValidProp } from '../../util/validator.util';
 import { TimestampDto } from './timestamp.dto';
+import { Type } from 'class-transformer';
+// Shared DTO: Copy in back-end and front-end should be identical
 
-@Entity({ name: 'edge' })
-@Index(['source', 'name'])
-export class EdgeDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
-
-  @Column()
-  @IsDefined()
-  @IsNumber()
-  is: number;
-
-  @Column()
-  @IsDefined()
-  @IsNumber()
-  it: number;
-
-  @Column()
-  @IsDefined()
+export class EdgeInsertDto {
   @IsString()
-  name: string;
+  @IsDefined()
+  name!: string;
 
-  @Column()
+  @ValidateNested()
   @IsOptional()
-  @IsValidProp()
-  @IsNotEmptyObject()
+  @IsObject()
+  @Type(() => EdgePropDto)
   prop?: EdgePropDto;
 
-  @Column()
-  @ApiProperty({ type: () => String })
-  @Transform((value) =>
-    value.obj.source ? new ObjectId(value.obj.source.toString()) : null,
-  )
+  @IsString()
   @IsDefined()
-  source: ObjectId;
+  source!: string;
 
-  @Column()
-  @ApiProperty({ type: () => String })
-  @Transform((value) =>
-    value.obj.target ? new ObjectId(value.obj.target.toString()) : null,
-  )
-  @Index()
+  @IsString()
   @IsDefined()
-  target: ObjectId;
+  target!: string;
+}
 
-  @IsOptional()
-  @Column(() => TimestampDto)
-  @Type(() => TimestampDto)
+export class EdgeDto extends EdgeInsertDto {
+  id!: string;
+  is!: number;
+  it!: number;
   timestamps?: TimestampDto;
-
-  static upgradeInsertDto(value: EdgeInsertDto): EdgeDto {
-    const edge = new EdgeDto();
-    edge.name = value.name;
-    if (value.prop) {
-      edge.prop = value.prop;
-    }
-    edge.source = new ObjectId(value.source);
-    edge.target = new ObjectId(value.target);
-
-    return edge;
-  }
-
-  public toEdgeResponse(includeOptional = true): EdgeRestDto {
-    return {
-      id: this.id.toString(),
-      is: this.is,
-      it: this.it,
-      name: this.name,
-      ...(includeOptional ? { prop: this.prop } : {}),
-      source: this.source.toString(),
-      target: this.target.toString(),
-      ...(includeOptional && this.timestamps
-        ? {
-            timestamps: {
-              ...(this.timestamps.createdAt
-                ? { createdAt: this.timestamps.createdAt.getTime() }
-                : {}),
-              ...(this.timestamps.updatedAt
-                ? { updatedAt: this.timestamps.updatedAt.getTime() }
-                : {}),
-            },
-          }
-        : {}),
-    };
-  }
 }

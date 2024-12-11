@@ -1,27 +1,14 @@
-import { Column } from 'typeorm';
-import { ObjectId } from 'mongodb';
-import { IsDefined, IsString } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
-import { IntentionDto } from '../../intention/dto/intention.dto';
-import { ActionDto } from '../../intention/dto/action.dto';
+import { IsString, IsOptional, IsDefined } from 'class-validator';
+
+// Shared DTO: Copy in back-end and front-end should be identical
 
 export class IntentionActionPointerDto {
   @IsString()
-  @IsDefined()
-  @Column()
-  action: string;
+  @IsOptional()
+  action?: string;
 
+  @IsString()
   @IsDefined()
-  @Column()
-  @ApiProperty({ type: () => String })
-  @Type(() => ObjectId)
-  @Transform((value) => new ObjectId(value.obj.intention.toString()))
-  intention: ObjectId;
-
-  // For returning joined intention
-  source?: {
-    intention: IntentionDto;
-    action: ActionDto;
-  };
+  intention: string;
+  source?: any;
 }

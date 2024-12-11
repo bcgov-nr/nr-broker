@@ -29,7 +29,6 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-search-input',
-  standalone: true,
   imports: [
     MatAutocompleteModule,
     ReactiveFormsModule,

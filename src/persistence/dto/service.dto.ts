@@ -1,44 +1,50 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 import {
   IsDefined,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { VertexPointerDto } from './vertex-pointer.dto';
+import { PackageBuildSearchResult } from './package-build.dto';
+import { ServiceInstanceDetailsResponseDto } from './service-instance.dto';
 import { VaultConfigDto } from './vault-config.dto';
+import { CollectionBaseDto, VertexPointerDto } from './vertex-pointer.dto';
+import { Type } from 'class-transformer';
 
-@Entity({ name: 'service' })
-export class ServiceDto extends VertexPointerDto {
-  @ObjectIdColumn()
-  @ApiProperty({ type: () => String })
-  id: ObjectId;
-
-  @IsOptional()
+// Shared DTO: Copy in back-end and front-end should be identical
+export class ServiceBaseDto extends CollectionBaseDto {
   @IsString()
-  @Column()
+  @IsOptional()
   description?: string;
 
+  @IsString()
   @IsDefined()
-  @IsString()
-  @Column()
-  name: string;
+  name!: string;
 
-  @IsOptional()
   @IsString()
-  @Column()
+  @IsOptional()
   title?: string;
 
-  @IsOptional()
   @IsString()
-  @Column()
+  @IsOptional()
   scmUrl?: string;
 
   @ValidateNested()
   @IsOptional()
-  @Column(() => VaultConfigDto)
   @Type(() => VaultConfigDto)
   vaultConfig?: VaultConfigDto;
+}
+
+export class ServiceDto extends ServiceBaseDto implements VertexPointerDto {
+  @IsString()
+  @IsDefined()
+  id!: string;
+
+  @IsString()
+  @IsDefined()
+  vertex!: string;
+}
+
+export class ServiceDetailsResponseDto extends ServiceDto {
+  serviceInstance: ServiceInstanceDetailsResponseDto[];
+  builds: PackageBuildSearchResult;
 }
