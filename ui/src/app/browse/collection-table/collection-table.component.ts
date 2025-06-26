@@ -68,11 +68,11 @@ import { UserSelfDto } from '../../service/persistence/dto/user.dto';
 
 export type ShowFilter = 'connected' | 'all';
 
-interface filterOptions<T> {
-  value: T;
-  viewValue: string;
-  tooltip: string;
-}
+// interface filterOptions<T> {
+//   value: T;
+//   viewValue: string;
+//   tooltip: string;
+// }
 
 interface TablePageQuery {
   index: number;
@@ -122,9 +122,7 @@ export class CollectionTableComponent implements OnInit, OnDestroy {
   computedText = computed(() =>
     (this.text() ? this.text().length : 0) < 3 ? '' : this.text(),
   );
-  showFilter = input<ShowFilter>(
-    this.preferences.get('browseConnectionFilter') ?? 'connected',
-  );
+  showFilter = input<ShowFilter>('connected');
   tags = input('');
   computedTags = computed(() =>
     this.tags() && this.tags().length > 1 ? this.tags().split(',') : [],
